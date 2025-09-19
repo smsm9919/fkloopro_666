@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>رفع الصور — Flow Market</title>
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+<header class="header"><div class="container"><h1>Flow Market — رفع الصور</h1></div></header>
+<main class="container">
+  <section class="card">
+    <form id="uploadForm">
+      <div class="field"><input type="file" id="file" accept="image/*" required/></div>
+      <div class="actions"><button type="submit">رفع</button></div>
+    </form>
+    <div id="result" class="result" hidden>
+      <p id="status"></p>
+      <div id="preview"></div>
+      <p><a id="link" href="#" target="_blank"></a></p>
+      <pre id="json"></pre>
+    </div>
+  </section>
+</main>
+<script>
+const form = document.getElementById('uploadForm');
+const statusEl = document.getElementById('status');
+const jsonEl = document.getElementById('json');
+const linkEl = document.getElementById('link');
+const previewEl = document.getElementById('preview');
+const resultBox = document.getElementById('result');
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const file = document.getElementById('file').files[0];
+  if (!file) return;
+  const fd = new FormData(); fd.append('file', file);
+  statusEl.textContent = 'جارِ الرفع...'; resultBox.hidden = false;
+  previewEl.innerHTML = ''; linkEl.textContent = ''; linkEl.removeAttribute('href'); jsonEl.textContent = '';
+  try {
+    const res = await fetch('/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    jsonEl.textContent = JSON.stringify(data, null, 2);
+    if (data.ok && data.url) {
+      statusEl.textContent = 'تم الرفع بنجاح';
+      const img = document.createElement('img'); img.src = data.url; img.className='thumb'; previewEl.appendChild(img);
+      linkEl.textContent = data.url; linkEl.href = data.url;
+    } else { statusEl.textContent = data.error || 'فشل في الرفع'; }
+  } catch { statusEl.textContent = 'خطأ اتصال'; }
+});
+</script>
+</body>
+</html>
